@@ -284,11 +284,15 @@ validate_users() {
       if ! $Privileged && [[ $user != "$(id -un)" ]]; then
          die "without sudo, only the invoking user may be configured"
       fi
-      # Verify the destination roots before any package or file operations.
-      for directory in "$home/.zshrc.d" "$home/.vim" \
-                       "$home/.config-backups"; do
-         check_directory_path "$directory"
-      done
+      # Preflight only the application directories we will actually touch.
+      check_directory_path "$home/.config-backups"
+      if $Privileged || $HaveZsh; then
+         check_directory_path "$home/.zshrc.d"
+         check_directory_path "$home/.zshrc.d/examples"
+      fi
+      if $Privileged || $HaveVim; then
+         check_directory_path "$home/.vim"
+      fi
       deduped+=("$user")
       UserHomes+=("$home")
       UserUids+=("$uid")
@@ -311,6 +315,16 @@ main() {
    parse_args "$@"
    validate_repo
    maybe_elevate "$@"
+   if ! $Privileged; then
+      $SetShell && die "--set-shell requires root or sudo access"
+      command -v zsh >/dev/null 2>&1 && HaveZsh=true
+      command -v vim >/dev/null 2>&1 && HaveVim=true
+      if ! $HaveZsh && ! $HaveVim; then
+         die "neither zsh nor Vim is installed, and this user has no sudo access"
+      fi
+      $HaveZsh || warn "zsh is unavailable; zsh configuration will not be installed"
+      $HaveVim || warn "Vim is unavailable; Vim configuration will not be installed"
+   fi
    validate_users
 
    if $Privileged; then
@@ -333,14 +347,6 @@ main() {
       sync_vim_home /etc/skel 0 0 "$system_backup"
       sync_runtime /usr/share/vim 0 0 "$system_backup" system
    else
-      $SetShell && die "--set-shell requires root or sudo access"
-      command -v zsh >/dev/null 2>&1 && HaveZsh=true
-      command -v vim >/dev/null 2>&1 && HaveVim=true
-      if ! $HaveZsh && ! $HaveVim; then
-         die "neither zsh nor Vim is installed, and this user has no sudo access"
-      fi
-      $HaveZsh || warn "zsh is unavailable; zsh configuration will not be installed"
-      $HaveVim || warn "Vim is unavailable; Vim configuration will not be installed"
       say 'Using unprivileged mode (invoking user home only).'
    fi
 
