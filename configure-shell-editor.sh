@@ -379,7 +379,9 @@ main() {
       fi
    done
    say "Finished: files updated=$FilesUpdated; managed files removed=$FilesRemoved; backups=$FilesBackedUp; warnings=$Warnings."
-   $DryRun && say 'Dry run: no modifications were made.'
+   if $DryRun; then
+      say 'Dry run: no modifications were made.'
+   fi
 }
 
 main "$@"
