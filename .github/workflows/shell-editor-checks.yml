@@ -1,9 +1,6 @@
 name: Shell and editor configuration checks
 
 on:
-  push:
-    branches:
-      - feat/issue-2-shell-editor-config
   pull_request:
     paths:
       - configure-shell-editor.sh
@@ -14,6 +11,11 @@ on:
 
 permissions:
   contents: read
+
+# Prevent obsolete PR revisions from competing for disposable CI runners.
+concurrency:
+  group: shell-editor-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   smoke:
