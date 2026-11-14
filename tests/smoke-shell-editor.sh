@@ -40,6 +40,25 @@ chown -R shell-editor-smoke:shell-editor-smoke "$home"
 chmod 0700 "$home/.zshrc.d"
 
 # Unprivileged mode must never touch /etc/skel, home ownership, or sudo/SSH.
+# A dry run must not fall through to an interactive sudo password prompt.
+# Put a fake sudo first in PATH: -n is safe, every other invocation leaves
+# a marker and fails the test.
+mkdir -p "$testrepo/testbin"
+cat > "$testrepo/testbin/sudo" <<'FAKE_SUDO'
+#!/bin/sh
+if [ "${1:-}" = -n ]; then
+   exit 1
+fi
+: > "$HOME/sudo-interactive-was-called"
+exit 77
+FAKE_SUDO
+chmod 0755 "$testrepo/testbin/sudo"
+runuser -u shell-editor-smoke -- env PATH="$testrepo/testbin:$PATH" \
+  "$testrepo/configure-shell-editor.sh" --dry-run --user shell-editor-smoke \
+  >/tmp/shell-editor-dry-run.log
+[[ ! -e "$home/sudo-interactive-was-called" ]]
+grep -q 'Previewing user-local changes only' /tmp/shell-editor-dry-run.log
+
 runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
   --user shell-editor-smoke --dry-run >/dev/null
 runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
