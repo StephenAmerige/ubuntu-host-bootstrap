@@ -63,4 +63,19 @@ fi
 # Root dry run exercises the privileged planning branch without host mutation.
 ./configure-shell-editor.sh --dry-run --user shell-editor-smoke >/dev/null
 
-echo 'Unprivileged installation, namespace, backup, idempotence and privileged dry-run checks passed.'
+# Privileged installation also refreshes /etc/skel and the shared Vim runtime.
+# It must leave this selected user's personal Vim override untouched.
+echo 'let g:personal_override = 1' > "$home/.vim/plugin/rc.vim"
+chown shell-editor-smoke:shell-editor-smoke "$home/.vim/plugin/rc.vim"
+./configure-shell-editor.sh --user shell-editor-smoke   >/tmp/shell-editor-smoke-root.log
+[[ -f /etc/skel/.zshrc ]]
+[[ -f /etc/skel/.vimrc ]]
+[[ -f /usr/share/vim/vimfiles/colors/summerfruit256.vim ]]
+[[ -f /usr/share/vim/template/help ]]
+[[ $(stat -c %a "$home") == 700 ]]
+[[ $(cat "$home/.vim/plugin/rc.vim") == 'let g:personal_override = 1' ]]
+[[ $(cat "$home/.zshrc.d/a0-custom.zsh") == 'preserve me' ]]
+./configure-shell-editor.sh --user shell-editor-smoke    >/tmp/shell-editor-smoke-root-rerun.log
+grep -q 'files updated=0; managed files removed=0; backups=0'    /tmp/shell-editor-smoke-root-rerun.log
+
+echo 'Unprivileged and privileged installation, namespace, backup, idempotence and isolation checks passed.'
