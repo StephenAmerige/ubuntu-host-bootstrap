@@ -21,6 +21,12 @@ fi
 
 # The integration portion must run on a disposable CI runner with root access.
 (( EUID == 0 )) || { echo 'Integration tests require root' >&2; exit 1; }
+# GitHub's /home/runner directory may be private to the runner account.
+# Copy sources into a traversable temporary checkout for the test user.
+testrepo=$(mktemp -d /tmp/ubuntu-host-bootstrap-test.XXXXXX)
+trap 'rm -rf -- "$testrepo"' EXIT
+chmod 0755 "$testrepo"
+cp -a configure-shell-editor.sh files "$testrepo/"
 apt-get update -qq
 apt-get install -y -qq --no-install-recommends zsh vim
 
@@ -33,9 +39,9 @@ echo 'remove me' > "$home/.zshrc.d/90-obsolete.zsh"
 chown -R shell-editor-smoke:shell-editor-smoke "$home"
 
 # Unprivileged mode must never touch /etc/skel, home ownership, or sudo/SSH.
-runuser -u shell-editor-smoke -- "$PWD/configure-shell-editor.sh" \
+runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
   --user shell-editor-smoke --dry-run >/dev/null
-runuser -u shell-editor-smoke -- "$PWD/configure-shell-editor.sh" \
+runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
   --user shell-editor-smoke >/tmp/shell-editor-smoke-first.log
 
 [[ $(stat -c %a "$home") == 700 ]]
@@ -48,13 +54,13 @@ runuser -u shell-editor-smoke -- "$PWD/configure-shell-editor.sh" \
 [[ -L "$home/.gvimrc" ]]
 find "$home/.config-backups" -name '90-obsolete.zsh' | grep -q .
 
-runuser -u shell-editor-smoke -- "$PWD/configure-shell-editor.sh" \
+runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
   --user shell-editor-smoke >/tmp/shell-editor-smoke-second.log
 grep -q 'files updated=0; managed files removed=0; backups=0' \
    /tmp/shell-editor-smoke-second.log
 
 # A non-sudo user must not be able to target root or any other user.
-if runuser -u shell-editor-smoke -- "$PWD/configure-shell-editor.sh" \
+if runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
    --user root >/dev/null 2>&1; then
    echo 'ERROR: cross-user unprivileged configuration was accepted' >&2
    exit 1
