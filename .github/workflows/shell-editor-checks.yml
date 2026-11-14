@@ -1,0 +1,29 @@
+name: Shell and editor configuration checks
+
+on:
+  pull_request:
+    paths:
+      - configure-shell-editor.sh
+      - tests/smoke-shell-editor.sh
+      - files/zsh/**
+      - files/vim/**
+      - .github/workflows/shell-editor-checks.yml
+
+permissions:
+  contents: read
+
+# Prevent obsolete PR revisions from competing for disposable CI runners.
+concurrency:
+  group: shell-editor-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Verify shell syntax and provisioning isolation
+        run: bash tests/smoke-shell-editor.sh
+      - name: Test on a disposable Ubuntu runner
+        run: sudo bash tests/smoke-shell-editor.sh --integration
