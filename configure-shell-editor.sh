@@ -33,6 +33,8 @@ FilesUpdated=0
 FilesRemoved=0
 FilesBackedUp=0
 DirectoriesUpdated=0
+# Track planned directories so --dry-run models earlier planned creations.
+declare -A PlannedDirs=()
 Privileged=false
 HaveZsh=false
 HaveVim=false
@@ -84,6 +86,13 @@ ensure_dir() {
       [[ $existing_mode == "${mode#0}" && $existing_owner == "$uid:$gid" ]] && return 0
    fi
    if $DryRun; then
+      local wanted="$uid:$gid:$mode"
+      if [[ -n ${PlannedDirs[$path]+present} ]]; then
+         [[ ${PlannedDirs[$path]} == "$wanted" ]] ||
+            die "conflicting directory plans for $path"
+         return 0
+      fi
+      PlannedDirs["$path"]="$wanted"
       say "PLAN directory: $path (owner $uid:$gid; mode $mode)"
       return 0
    fi
@@ -100,7 +109,11 @@ ensure_dir() {
 ensure_parent_dir() {
    local path="$1" uid="$2" gid="$3"
    check_directory_path "$path"
-   [[ -d $path ]] || ensure_dir "$path" "$uid" "$gid" 0755
+   [[ -d $path ]] && return 0
+   if $DryRun && [[ -n ${PlannedDirs[$path]+present} ]]; then
+      return 0
+   fi
+   ensure_dir "$path" "$uid" "$gid" 0755
 }
 
 # Existing files and links are copied without dereferencing. Each run uses
