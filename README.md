@@ -28,10 +28,51 @@ unverified redistribution license as described there.
 - Install the shared-group and individual-user provisioning helpers into `/usr/local/bin` for later administration.
 - Optionally schedule a reboot after successful provisioning, whether launched manually or through cloud-init.
 
+## Configuring zsh and Vim on an existing Ubuntu host
+
+The independent `configure-shell-editor.sh` utility installs or updates this repository's canonical zsh and Vim configuration **without** running Docker provisioning, user/group creation, SSH key administration, or the `provision-vm.sh` orchestrator. It works on established Ubuntu VMs, physical hosts, and WSL2 distributions. The existing first-boot path (`example-invocation.sh` → `provision-vm.sh` → `vm-bootstrap.sh`) remains unchanged.
+
+Run it from a checkout of this repository:
+
+```bash
+./configure-shell-editor.sh
+./configure-shell-editor.sh -u samerig --user ubuntu
+sudo ./configure-shell-editor.sh --user samerig --set-shell
+./configure-shell-editor.sh --dry-run -u samerig
+```
+
+If no `--user` is supplied, the invoking account is the default target (when launched through `sudo`, the original `SUDO_USER` is used). Specify `--user root` explicitly to configure root. Multiple `-u` / `--user` arguments are supported and deduplicated. **Changing a login shell is opt-in** via `--set-shell` and requires root/sudo.
+
+### Privilege and package behavior
+
+| Context | Applications | System files | Users |
+| --- | --- | --- | --- |
+| Root or sudo-authorized | Run `apt-get update` and `apt-get install -y --no-install-recommends zsh vim` (installs missing packages, upgrades available zsh/Vim packages) | Refresh `/etc/skel` and bundled Vim runtime under `/usr/share/vim/` | All selected existing users |
+| Without sudo, both present | No APT operations | Unchanged | Own home: zsh, Vim, and user-local Vim runtime |
+| Without sudo, only one present | Warn for missing tool; no APT operations | Unchanged | Own home: installed tool only |
+| Without sudo, neither present | Fail with an error | Unchanged | No changes |
+
+The script attempts sudo authorization if available; this may prompt for a password. Without sudo, selecting any other user is rejected. Explicit user accounts and home directories are validated before packages or configurations change. No application is built from source.
+
+### Repository-managed and personal zsh files
+
+Files `~/.zshrc` and `~/.zshenv` always come from the repository. Under `~/.zshrc.d/`, active filenames matching `00-*.zsh` through `9f-*.zsh` are **repository-managed**: they are installed/updated and obsolete managed modules are backed up then removed. Prefixes `a0` through `ff` are **user-reserved**: the installer never changes their active files. The `examples/` directory is refreshed but its examples are not activated. The same namespace rule applies to `/etc/skel`.
+
+Vim configuration is installed to `~/.vimrc`, with `~/.gvimrc` linked to it; private `~/.vim/{save,swp,undo}` directories are created. When privileged, bundled plugins, colors, and templates go into the historical system runtime under `/usr/share/vim/`; without sudo, they go into `~/.vim/`, with templates under `~/.vim/template/`. The Vim configuration chooses the user-local templates when present, otherwise the system templates. Personal `~/.vim/plugin/rc.vim` is left alone.
+
+### Backups and safe repeat execution
+
+Before replacing or removing a changed managed file, the utility saves the old file/symlink in a per-run timestamped backup tree. For users this is `~/.config-backups/ubuntu-host-bootstrap/`; for system files it is `/var/backups/ubuntu-host-bootstrap/`. Identical files with correct ownership/mode are skipped. Use `--dry-run` to inspect intended operations; it does not modify packages or files. The tool refuses unsafe symlinked directory paths and does not delete unrelated files. Root/sudo operations intentionally affect all selected users and system defaults; review the dry run first on existing machines.
+
+**Validation after use:** Run `command -v zsh vim`, `zsh -ic 'exit'`, and `vim -Nu ~/.vimrc -es -c 'colorscheme summerfruit256' -c 'qa!'`. Reopen a session if you used `--set-shell`. The original VM bootstrap and account-management helpers have not been refactored to call this utility.
+
+---
+
 ## Repository layout
 
 ```text
 ubuntu-host-bootstrap/
+├── configure-shell-editor.sh  # Opt-in existing-host zsh/Vim configuration
 ├── vm-bootstrap.sh             # Ubuntu, Docker, zsh, Vim, initial accounts and helpers
 ├── provision-vm.sh             # Sourced provisioning orchestration logic
 ├── create-shared-group.sh      # Collaborative group, non-login account and ACLs

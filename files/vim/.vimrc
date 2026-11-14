@@ -543,8 +543,10 @@ nnoremap <silent> <leader>l /^\[[^]]*\]<CR>
 nnoremap <silent> <leader>k /%{[^}]*}%<cr>
 
 " Read a template into the current buffer
-nnoremap <silent> <leader>T :.-1r $VIM/template/
-nnoremap <silent> <leader>t :r $VIM/template/
+" Prefer per-user templates when installed; otherwise use the system runtime.
+let s:TemplateRoot = isdirectory(expand('~/.vim/template')) ? expand('~/.vim/template') : expand('$VIM/template')
+execute 'nnoremap <silent> <leader>T :.-1r ' . fnameescape(s:TemplateRoot) . '/'
+execute 'nnoremap <silent> <leader>t :r ' . fnameescape(s:TemplateRoot) . '/'
 
 " Open Buffer Explorer: easily navigate between buffers
 nnoremap <silent> <leader>x :BufExplorer<CR>
