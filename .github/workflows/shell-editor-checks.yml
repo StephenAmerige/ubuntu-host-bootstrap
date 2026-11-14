@@ -1,0 +1,27 @@
+name: Shell and editor configuration checks
+
+on:
+  push:
+    branches:
+      - feat/issue-2-shell-editor-config
+  pull_request:
+    paths:
+      - configure-shell-editor.sh
+      - tests/smoke-shell-editor.sh
+      - files/zsh/**
+      - files/vim/**
+      - .github/workflows/shell-editor-checks.yml
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Verify shell syntax and provisioning isolation
+        run: bash tests/smoke-shell-editor.sh
+      - name: Test on a disposable Ubuntu runner
+        run: sudo bash tests/smoke-shell-editor.sh --integration
