@@ -176,7 +176,13 @@ sync_zsh() {
    local target="$1" uid="$2" gid="$3" backups="$4" file name prefix
    sync_file "$ZshDir/.zshrc" "$target/.zshrc" "$uid" "$gid" 0644 "$backups"
    sync_file "$ZshDir/.zshenv" "$target/.zshenv" "$uid" "$gid" 0644 "$backups"
-   ensure_dir "$target/.zshrc.d" "$uid" "$gid" 0755
+   # Preserve the mode of an existing personal configuration directory.
+   # On shared homes it may intentionally be private (0700).
+   if [[ -d "$target/.zshrc.d" ]]; then
+      check_directory_path "$target/.zshrc.d"
+   else
+      ensure_dir "$target/.zshrc.d" "$uid" "$gid" 0700
+   fi
 
    shopt -s nullglob
    for file in "$ZshDir"/.zshrc.d/*.zsh; do
@@ -202,7 +208,7 @@ sync_zsh() {
       fi
    done
 
-   ensure_dir "$target/.zshrc.d/examples" "$uid" "$gid" 0755
+   ensure_parent_dir "$target/.zshrc.d/examples" "$uid" "$gid"
    for file in "$ZshDir"/.zshrc.d/examples/*; do
       [[ -f $file ]] || continue
       sync_file "$file" "$target/.zshrc.d/examples/${file##*/}" \
