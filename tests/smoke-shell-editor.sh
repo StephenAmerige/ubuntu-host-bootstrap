@@ -37,6 +37,7 @@ mkdir -p "$home/.zshrc.d"
 echo 'preserve me' > "$home/.zshrc.d/a0-custom.zsh"
 echo 'remove me' > "$home/.zshrc.d/90-obsolete.zsh"
 chown -R shell-editor-smoke:shell-editor-smoke "$home"
+chmod 0700 "$home/.zshrc.d"
 
 # Unprivileged mode must never touch /etc/skel, home ownership, or sudo/SSH.
 runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
@@ -45,6 +46,7 @@ runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
   --user shell-editor-smoke >/tmp/shell-editor-smoke-first.log
 
 [[ $(stat -c %a "$home") == 700 ]]
+[[ $(stat -c %a "$home/.zshrc.d") == 700 ]]
 [[ $(stat -c %U "$home/.zshrc") == shell-editor-smoke ]]
 [[ $(stat -c %U "$home/.vimrc") == shell-editor-smoke ]]
 [[ $(cat "$home/.zshrc.d/a0-custom.zsh") == 'preserve me' ]]
