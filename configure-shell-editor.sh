@@ -310,26 +310,23 @@ validate_users() {
 maybe_elevate() {
    (( EUID != 0 )) || { Privileged=true; return; }
 
-   if $DryRun; then
-      # A preview must never ask for a password. If sudo already has a valid
-      # credential or is passwordless, show the full privileged plan.
-      # Otherwise display only the changes permitted to this account.
-      if command -v sudo >/dev/null 2>&1 &&
-         sudo -n -v >/dev/null 2>&1; then
+   if command -v sudo >/dev/null 2>&1; then
+      # sudo -n true tests *command execution* without a password prompt.
+      # sudo -n -v is a credential-validation operation; sudoers can apply
+      # different authentication policy to verification and execution.
+      if sudo -n true >/dev/null 2>&1; then
          exec sudo -n -H -- "$ScriptDir/configure-shell-editor.sh" "$@"
       fi
-      say 'Note: sudo is not currently authorized without authentication.'
-      say 'Previewing user-local changes only. For a complete privileged preview:'
-      say '  sudo ./configure-shell-editor.sh --dry-run [--user USER ...]'
-      Privileged=false
-      return
-   fi
-
-   # Real installations may prompt once to authorize system modifications.
-   if command -v sudo >/dev/null 2>&1; then
-      if sudo -n -v >/dev/null 2>&1 || sudo -v; then
+      if ! $DryRun && sudo -v; then
+         # Interactive authentication is permitted for an actual install.
          exec sudo -H -- "$ScriptDir/configure-shell-editor.sh" "$@"
       fi
+   fi
+
+   if $DryRun; then
+      say 'Note: sudo cannot execute commands noninteractively.'
+      say 'Previewing user-local changes only. For a complete privileged preview:'
+      say '  sudo ./configure-shell-editor.sh --dry-run [--user USER ...]'
    fi
    Privileged=false
 }
