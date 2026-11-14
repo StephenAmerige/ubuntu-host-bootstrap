@@ -101,7 +101,17 @@ grep -q 'Using privileged mode' /tmp/shell-editor-nopasswd.log
 rm -f /etc/sudoers.d/91-shell-editor-smoke
 
 # Root dry run exercises the privileged planning branch without host mutation.
-./configure-shell-editor.sh --dry-run --user shell-editor-smoke >/dev/null
+./configure-shell-editor.sh --dry-run --user shell-editor-smoke \
+  >/tmp/shell-editor-privileged-dry-run.log
+# A dry-run should model planned directory creation and report each path once.
+awk '
+  /^PLAN directory: / {
+    sub(/^PLAN directory: /, "")
+    sub(/ \(owner .*/, "")
+    if (seen[$0]++) { print "duplicate directory plan: " $0 >"/dev/stderr"; bad=1 }
+  }
+  END { exit bad }
+' /tmp/shell-editor-privileged-dry-run.log
 
 # Privileged installation also refreshes /etc/skel and the shared Vim runtime.
 # It must leave this selected user's personal Vim override untouched.
