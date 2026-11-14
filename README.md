@@ -52,7 +52,7 @@ If no `--user` is supplied, the invoking account is the default target (when lau
 | Without sudo, only one present | Warn for missing tool; no APT operations | Unchanged | Own home: installed tool only |
 | Without sudo, neither present | Fail with an error | Unchanged | No changes |
 
-The script attempts sudo authorization if available; this may prompt for a password. Without sudo, selecting any other user is rejected. Explicit user accounts and home directories are validated before packages or configurations change. No application is built from source.
+For a **real installation**, the script attempts sudo authorization if available, which may prompt for the invoking user's password; membership in the `sudo` group is not the same as `NOPASSWD` authorization. For `--dry-run`, it **never requests authentication**: if sudo is already available non-interactively, it previews privileged operations; otherwise it previews only the invoking user's configuration and prints how to request a full privileged preview explicitly (`sudo ./configure-shell-editor.sh --dry-run --user USER`). Without sudo authorization, selecting any other user is rejected. Explicit user accounts and home directories are validated before packages or configurations change. No application is built from source.
 
 ### Repository-managed and personal zsh files
 
