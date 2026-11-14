@@ -24,7 +24,7 @@ fi
 # GitHub's /home/runner directory may be private to the runner account.
 # Copy sources into a traversable temporary checkout for the test user.
 testrepo=$(mktemp -d /tmp/ubuntu-host-bootstrap-test.XXXXXX)
-trap 'rm -rf -- "$testrepo"' EXIT
+trap 'rm -rf -- "$testrepo"; rm -f /etc/sudoers.d/91-shell-editor-smoke' EXIT
 chmod 0755 "$testrepo"
 cp -a configure-shell-editor.sh files "$testrepo/"
 apt-get update -qq
@@ -86,6 +86,19 @@ if runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
    echo 'ERROR: cross-user unprivileged configuration was accepted' >&2
    exit 1
 fi
+
+# Verify the sudo NOPASSWD path also uses noninteractive elevation.
+# This temporary policy is confined to the disposable CI runner and is
+# deleted by the test cleanup trap.
+printf '%s\n' 'shell-editor-smoke ALL=(ALL:ALL) NOPASSWD: ALL' \
+   >/etc/sudoers.d/91-shell-editor-smoke
+chmod 0440 /etc/sudoers.d/91-shell-editor-smoke
+visudo -cf /etc/sudoers.d/91-shell-editor-smoke
+runuser -u shell-editor-smoke -- sudo -n true
+runuser -u shell-editor-smoke -- "$testrepo/configure-shell-editor.sh" \
+   --dry-run --user shell-editor-smoke >/tmp/shell-editor-nopasswd.log
+grep -q 'Using privileged mode' /tmp/shell-editor-nopasswd.log
+rm -f /etc/sudoers.d/91-shell-editor-smoke
 
 # Root dry run exercises the privileged planning branch without host mutation.
 ./configure-shell-editor.sh --dry-run --user shell-editor-smoke >/dev/null
