@@ -81,7 +81,7 @@ ensure_dir() {
    if [[ -d $path ]]; then
       existing_mode=$(stat -c %a -- "$path")
       existing_owner=$(stat -c %u:%g -- "$path")
-      [[ $existing_mode == "$((8#$mode))" && $existing_owner == "$uid:$gid" ]] && return 0
+      [[ $existing_mode == "${mode#0}" && $existing_owner == "$uid:$gid" ]] && return 0
    fi
    if $DryRun; then
       say "PLAN directory: $path (owner $uid:$gid; mode $mode)"
@@ -93,6 +93,14 @@ ensure_dir() {
       install -d -m "$mode" -- "$path"
    fi
    (( DirectoriesUpdated += 1 ))
+}
+
+# A parent that already exists is never chmodded or chowned. In
+# particular, do NOT change an existing user's home-directory mode to 0755.
+ensure_parent_dir() {
+   local path="$1" uid="$2" gid="$3"
+   check_directory_path "$path"
+   [[ -d $path ]] || ensure_dir "$path" "$uid" "$gid" 0755
 }
 
 # Existing files and links are copied without dereferencing. Each run uses
@@ -116,14 +124,14 @@ backup_existing() {
 sync_file() {
    local source="$1" destination="$2" uid="$3" gid="$4" mode="$5" backups="$6"
    [[ -f $source && ! -L $source ]] || die "invalid source file: $source"
-   ensure_dir "$(dirname -- "$destination")" "$uid" "$gid" 0755
+   ensure_parent_dir "$(dirname -- "$destination")" "$uid" "$gid"
    [[ ! -d $destination ]] || die "destination is a directory: $destination"
    if [[ -e $destination && ! -f $destination && ! -L $destination ]]; then
       die "unsupported destination type: $destination"
    fi
    if [[ -f $destination && ! -L $destination ]] &&
       cmp -s -- "$source" "$destination" &&
-      [[ $(stat -c %a -- "$destination") == "$((8#$mode))" ]] &&
+      [[ $(stat -c %a -- "$destination") == "${mode#0}" ]] &&
       [[ $(stat -c %u:%g -- "$destination") == "$uid:$gid" ]]; then
       return 0
    fi
@@ -146,7 +154,7 @@ sync_file() {
 
 sync_link() {
    local destination="$1" target="$2" uid="$3" gid="$4" backups="$5"
-   ensure_dir "$(dirname -- "$destination")" "$uid" "$gid" 0755
+   ensure_parent_dir "$(dirname -- "$destination")" "$uid" "$gid"
    [[ ! -d $destination ]] || die "destination is a directory: $destination"
    if [[ -L $destination && $(readlink -- "$destination") == "$target" ]]; then
       return 0
@@ -262,7 +270,7 @@ validate_users() {
       Users=("${SUDO_USER:-$(id -un)}")
    fi
    for user in "${Users[@]}"; do
-      [[ -n $user && $user != *:* && $user != */* ]] ||
+      [[ $user =~ ^[a-z_][a-z0-9_-]*[$]?$ ]] ||
          die "invalid username: $user"
       [[ ! -v seen[$user] ]] || continue
       seen[$user]=1
