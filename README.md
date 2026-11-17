@@ -33,8 +33,9 @@ unverified redistribution license as described there.
 For standalone Zsh distribution, this repository can publish a versioned
 `zshfiles.zip` and SHA-256 checksum as [GitHub Release assets](https://github.com/StephenAmerige/ubuntu-host-bootstrap/releases).
 The ZIP is ordered for direct extraction into a user's home directory.
-Once installed, run `zupdate --check` or `zupdate` to manage subsequent
-updates without cloning GitHub or using sudo.
+Once installed, run `zupdate` (or `zupdate --check`) to check for newer
+releases without modifying files. Use **`zupdate -y`** to explicitly apply an
+available update, without cloning GitHub or using sudo.
 
 See the [Zsh README](files/zsh/README.md) for installation choices, safety
 considerations, and how to publish the first release.
