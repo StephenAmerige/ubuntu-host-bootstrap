@@ -78,12 +78,19 @@ release with this new behavior. From then on, bare `zupdate` only checks and
 `zupdate -y` explicitly installs. Avoid assuming `-y` works before upgrading.
 
 The apply mode verifies the downloaded archive checksum and allowed members
-before modifying files, backs up changed managed files, removes retired
-managed modules, and preserves personal `a0`–`ff` files. It never uses
-`sudo` or performs network checks during shell startup. Restart Zsh after
-an update to load the changed modules. These features require `curl`,
-`unzip`, and standard Ubuntu command-line utilities; `zupdate` does not
-install packages.
+before modifying files. It backs up and then **removes every top-level
+numeric-prefixed entry** in `~/.zshrc.d/` and the **entire
+`~/.zshrc.d/examples/` directory**, before installing the current
+release-managed modules and examples. Obsolete files cannot linger.
+The top-level user-reserved `a0`–`ff` modules are left untouched. A
+failed installation attempts to restore the previous managed files and
+examples from the backup. Do not put personal data in the `examples/`
+directory; its contents are replaced on every installed update.
+
+`zupdate -y` never uses `sudo` or performs network checks during shell
+startup. Restart Zsh afterward to load the new modules. These features
+require `curl`, `unzip`, and standard Ubuntu utilities; `zupdate`
+does not install packages.
 
 To build a ZIP locally from the repository source:
 
