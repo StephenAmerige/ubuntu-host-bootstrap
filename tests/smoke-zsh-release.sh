@@ -26,7 +26,7 @@ zsh -n "$RepoRoot/files/zsh/.zshrc.d/00-help-update.zsh"
 # Discover the updater using its actual command name, not the legacy filename.
 HelpModule="$RepoRoot/files/zsh/.zshrc.d/00-help.zsh"
 UpdateHelpModule="$RepoRoot/files/zsh/.zshrc.d/00-help-update.zsh"
-HelpTopics=$(zsh -f -c 'source "$1"; source "$2"; help -l' \
+HelpTopics=$(zsh -f -c 'source "$1"; function :help:update { :; }; source "$2"; help -l' \
    zsh-help-check "$HelpModule" "$UpdateHelpModule")
 grep -Eq '^[[:space:]]+zupdate$' <<< "$HelpTopics"
 ! grep -Eq '^[[:space:]]+update$' <<< "$HelpTopics"
