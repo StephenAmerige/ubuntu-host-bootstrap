@@ -5,6 +5,10 @@
 # archive member while loading newer configuration versions.
 ########################################################################
 
+# Re-sourcing ~/.zshrc (via the ".." alias) should drop the old topic
+# immediately, without requiring a fresh Zsh process.
+unfunction ':help:update' 2>/dev/null || true
+
 function :help:zupdate
 {
    print -P -- '%BZsh Configuration Updates%b'
