@@ -22,6 +22,22 @@ diff -u "$Temp/expected" "$Temp/actual"
 command -v zsh >/dev/null || { echo 'zsh required for updater smoke test' >&2; exit 1; }
 zsh -n "$RepoRoot/files/zsh/.zshrc.d/95-update.zsh"
 zsh -n "$RepoRoot/files/zsh/.zshrc.d/00-help-update.zsh"
+
+# Discover the updater using its actual command name, not the legacy filename.
+HelpModule="$RepoRoot/files/zsh/.zshrc.d/00-help.zsh"
+UpdateHelpModule="$RepoRoot/files/zsh/.zshrc.d/00-help-update.zsh"
+HelpTopics=$(zsh -f -c 'source "$1"; function :help:update { :; }; source "$2"; help -l' \
+   zsh-help-check "$HelpModule" "$UpdateHelpModule")
+grep -Eq '^[[:space:]]+zupdate$' <<< "$HelpTopics"
+! grep -Eq '^[[:space:]]+update$' <<< "$HelpTopics"
+HelpText=$(zsh -f -c 'source "$1"; source "$2"; help zupdate' \
+   zsh-help-check "$HelpModule" "$UpdateHelpModule")
+grep -Fq 'Zsh Configuration Updates' <<< "$HelpText"
+if zsh -f -c 'source "$1"; source "$2"; help update' \
+   zsh-help-check "$HelpModule" "$UpdateHelpModule" >/dev/null 2>&1; then
+   echo 'Unexpected legacy help update alias' >&2
+   exit 1
+fi
 bash "$RepoRoot/tests/smoke-ztag.sh"
 
 export HOME="$Temp/home"

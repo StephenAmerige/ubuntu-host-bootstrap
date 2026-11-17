@@ -83,7 +83,7 @@ function :help:zsh
       "Explain terminal window/tab title modes."
    print
 
-   :help-command "help update"
+   :help-command "help zupdate"
    :help-wrap-indent 6 \
       "Explain checking and applying versioned Zsh configuration releases."
    print

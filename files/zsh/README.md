@@ -66,7 +66,7 @@ Once the release ZIP is installed, a new Zsh session provides:
 zupdate --version   Show the installed release version
 zupdate --check     Compare it with the latest published release
 zupdate             Update to the latest release
-help update         Explain the updater and its safeguards
+help zupdate        Explain the updater and its safeguards
 ```
 
 `zupdate` verifies the downloaded archive checksum and allowed members
@@ -104,7 +104,7 @@ to list currently available topics. More detailed topics include:
 | `help directories` | Directory stack navigation |
 | `help path` | PATH and MANPATH helpers |
 | `help title` | Terminal window/tab title |
-| `help update` | Check and install released Zsh updates |
+| `help zupdate` | Check and install released Zsh updates |
 | `help ztag` | Create and push guarded semantic-version Git tags |
 
 Each help topic is automatically discovered from a `:help:<topic>`
