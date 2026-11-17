@@ -31,7 +31,7 @@ mkdir -p "$LoaderHome/.zshrc.d"
 for Name in 00-managed a0-user ff-user; do
    printf 'print -r -- "loaded-%s"\n' "$Name" > "$LoaderHome/.zshrc.d/$Name.zsh"
 done
-for Name in 0-invalid 9g-invalid A0-upper gg-invalid a0-invalid.txt; do
+for Name in 0-invalid 9g-invalid A0-upper gg-invalid a0invalid; do
    printf 'print -r -- "loaded-invalid-%s"\n' "$Name" > "$LoaderHome/.zshrc.d/$Name.zsh"
 done
 LoaderOutput=$(HOME="$LoaderHome" zsh -f -ic 'source "$1"' zsh-loader-check \
