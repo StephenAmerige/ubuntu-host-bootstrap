@@ -102,6 +102,19 @@ case "$URL" in
 esac
 MOCK
 chmod +x "$Temp/bin/curl"
+
+# Force a late example-install failure to verify that the complete original
+# numeric namespace and examples tree are restored on rollback.
+cat > "$Temp/bin/install" <<'MOCK'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ ${MOCK_FAIL_INSTALL:-} == 1 && ${3:-} == */unpacked/.zshrc.d/examples/ff-user.zsh ]]; then
+   echo 'Deliberately failing example installation' >&2
+   exit 1
+fi
+exec /usr/bin/install "$@"
+MOCK
+chmod +x "$Temp/bin/install"
 export PATH="$Temp/bin:$PATH"
 
 # The default and --check must never download release assets or alter managed files.
@@ -124,7 +137,24 @@ grep -Fxq 'remove obsolete example' "$HOME/.zshrc.d/examples/retired-example.zsh
 grep -Fxq 'remove obsolete nested example' "$HOME/.zshrc.d/examples/obsolete-subdir/old.txt"
 ! grep -Fxq "typeset -g _ZshFilesVersion=$Tag" "$HOME/.zshrc.d/00-version.zsh"
 
-# Only -y may apply the release; the existing backup/retirement safeguards remain.
+# A failure after clearing the namespace must restore all original files.
+if MOCK_FAIL_INSTALL=1 zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; :zupdate:apply "$1" "$2"' \
+   zsh-rollback-test "$Tag" "$Temp/assets" > "$Temp/rollback.log" 2>&1; then
+   echo 'zupdate unexpectedly succeeded despite failed example installation' >&2
+   exit 1
+fi
+grep -Fq 'rolling back' "$Temp/rollback.log"
+grep -Fxq 'prior shell file' "$HOME/.zshrc"
+grep -Fxq 'prior managed module' "$HOME/.zshrc.d/10-obsolete.zsh"
+grep -Fxq 'remove non-zsh file' "$HOME/.zshrc.d/7-stale.txt"
+grep -Fxq 'remove obsolete example' "$HOME/.zshrc.d/examples/retired-example.zsh"
+grep -Fxq 'remove obsolete nested example' "$HOME/.zshrc.d/examples/obsolete-subdir/old.txt"
+grep -Fxq 'preserve a0 settings' "$HOME/.zshrc.d/a0-personal.zsh"
+grep -Fxq 'preserve personal settings' "$HOME/.zshrc.d/e0-personal.zsh"
+grep -Fxq 'preserve ff settings' "$HOME/.zshrc.d/ff-personal.zsh"
+grep -Fxq 'typeset -g _ZshFilesVersion=source' "$HOME/.zshrc.d/00-version.zsh"
+
+# Only -y may apply the release; backup and retirement safeguards remain.
 zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate -y'
 [[ $(wc -l < "$MOCK_ASSET_LOG") == 2 ]]
 grep -Fxq "typeset -g _ZshFilesVersion=$Tag" "$HOME/.zshrc.d/00-version.zsh"
