@@ -51,6 +51,22 @@ printf 'prior shell file\n' > "$HOME/.zshrc"
 printf 'prior managed module\n' > "$HOME/.zshrc.d/10-obsolete.zsh"
 printf 'preserve personal settings\n' > "$HOME/.zshrc.d/e0-personal.zsh"
 
+# Bare help should show the installed release and point to zupdate without
+# requiring a network lookup. The source checkout is explicitly unversioned.
+HelpUsage=$(zsh -f -c 'source "$1"; source "$2"; help' \
+   zsh-help-check "$HelpModule" "$HOME/.zshrc.d/95-update.zsh")
+grep -Fq 'Installed configuration: source checkout (unversioned)' <<< "$HelpUsage"
+grep -Fq 'zupdate          Check for the latest release (no changes)' <<< "$HelpUsage"
+grep -Fq 'zupdate -y       Install an available release' <<< "$HelpUsage"
+grep -Fq 'help zupdate     Explain release updates and safeguards' <<< "$HelpUsage"
+
+# The reported release must come from the installed marker, not the network.
+printf 'typeset -g _ZshFilesVersion=v2.3.4\n' > "$HOME/.zshrc.d/00-version.zsh"
+HelpUsage=$(zsh -f -c 'source "$1"; source "$2"; help' \
+   zsh-help-check "$HelpModule" "$HOME/.zshrc.d/95-update.zsh")
+grep -Fq 'Installed configuration: v2.3.4' <<< "$HelpUsage"
+cp "$RepoRoot/files/zsh/.zshrc.d/00-version.zsh" "$HOME/.zshrc.d/00-version.zsh"
+
 cat > "$Temp/bin/curl" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail

@@ -98,8 +98,11 @@ does not publish a release.
 
 ## Interactive help
 
-Run `help` for a brief introduction and four examples, or `help -l`
-to list currently available topics. More detailed topics include:
+Run `help` for a brief introduction, **the installed Zsh configuration
+version**, and the safe release commands (`zupdate` checks; `zupdate -y`
+installs). It reads the local version marker; it does not contact GitHub or
+check whether a newer release exists. Use `help -l` to list currently
+available topics. More detailed topics include:
 
 | Command | Content |
 | --- | --- |
