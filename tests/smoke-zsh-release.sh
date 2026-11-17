@@ -33,6 +33,7 @@ grep -Eq '^[[:space:]]+zupdate$' <<< "$HelpTopics"
 HelpText=$(zsh -f -c 'source "$1"; source "$2"; help zupdate' \
    zsh-help-check "$HelpModule" "$UpdateHelpModule")
 grep -Fq 'Zsh Configuration Updates' <<< "$HelpText"
+grep -Fq 'zupdate -y' <<< "$HelpText"
 if zsh -f -c 'source "$1"; source "$2"; help update' \
    zsh-help-check "$HelpModule" "$UpdateHelpModule" >/dev/null 2>&1; then
    echo 'Unexpected legacy help update alias' >&2
@@ -97,7 +98,8 @@ zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate --version; zupdate; zu
 
 # Reject ambiguous or unsupported update requests before any mutation.
 for Args in '--check -y' '-y --check' '--yes' '--version -y'; do
-   if zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate "${=1}"' zupdate-test "$Args" >/dev/null 2>&1; then
+   read -r -a Arguments <<< "$Args"
+   if zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate "$@"' zupdate-test "${Arguments[@]}" >/dev/null 2>&1; then
       echo "zupdate unexpectedly accepted: $Args" >&2
       exit 1
    fi
