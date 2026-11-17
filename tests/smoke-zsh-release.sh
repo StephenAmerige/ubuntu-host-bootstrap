@@ -20,8 +20,29 @@ diff -u "$Temp/expected" "$Temp/actual"
 ! grep -Eq '(^README[.]md$|[/]a[0-9a-f]-)' "$Temp/actual"
 
 command -v zsh >/dev/null || { echo 'zsh required for updater smoke test' >&2; exit 1; }
+zsh -n "$RepoRoot/files/zsh/.zshrc"
 zsh -n "$RepoRoot/files/zsh/.zshrc.d/95-update.zsh"
 zsh -n "$RepoRoot/files/zsh/.zshrc.d/00-help-update.zsh"
+
+# Test real startup-module loading with valid two-hex-prefix files, invalid
+# names, and an empty module directory; no extra *.zsh files may run.
+LoaderHome="$Temp/loader-home"
+mkdir -p "$LoaderHome/.zshrc.d"
+for Name in 00-managed a0-user ff-user; do
+   printf 'print -r -- "loaded-%s"\n' "$Name" > "$LoaderHome/.zshrc.d/$Name.zsh"
+done
+for Name in 0-invalid 9g-invalid A0-upper gg-invalid a0-invalid.txt; do
+   printf 'print -r -- "loaded-invalid-%s"\n' "$Name" > "$LoaderHome/.zshrc.d/$Name.zsh"
+done
+LoaderOutput=$(HOME="$LoaderHome" zsh -f -ic 'source "$1"' zsh-loader-check \
+   "$RepoRoot/files/zsh/.zshrc")
+grep -Fxq 'loaded-00-managed' <<< "$LoaderOutput"
+grep -Fxq 'loaded-a0-user' <<< "$LoaderOutput"
+grep -Fxq 'loaded-ff-user' <<< "$LoaderOutput"
+! grep -Fq 'loaded-invalid' <<< "$LoaderOutput"
+mkdir -p "$Temp/empty-loader-home/.zshrc.d"
+HOME="$Temp/empty-loader-home" zsh -f -ic 'source "$1"' zsh-loader-check \
+   "$RepoRoot/files/zsh/.zshrc" >/dev/null
 
 # Discover the updater using its actual command name, not the legacy filename.
 HelpModule="$RepoRoot/files/zsh/.zshrc.d/00-help.zsh"
@@ -108,7 +129,7 @@ chmod +x "$Temp/bin/curl"
 cat > "$Temp/bin/install" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
-if [[ ${MOCK_FAIL_INSTALL:-} == 1 && ${3:-} == */unpacked/.zshrc.d/examples/ff-user.zsh ]]; then
+if [[ ${MOCK_FAIL_INSTALL:-} == 1 && ${4:-} == */unpacked/.zshrc.d/examples/ff-user.zsh ]]; then
    echo 'Deliberately failing example installation' >&2
    exit 1
 fi
