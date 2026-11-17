@@ -72,6 +72,11 @@ help zupdate        Explain the updater and its safeguards
 
 `zupdate` and `zupdate --check` only compare versions and advise when an
 update is available. Apply changes explicitly with **`zupdate -y`**.
+**Transition for older installations:** If the installed updater does not yet
+recognize `-y`, run its existing `zupdate` command **once** to install the
+release with this new behavior. From then on, bare `zupdate` only checks and
+`zupdate -y` explicitly installs. Avoid assuming `-y` works before upgrading.
+
 The apply mode verifies the downloaded archive checksum and allowed members
 before modifying files, backs up changed managed files, removes retired
 managed modules, and preserves personal `a0`–`ff` files. It never uses
