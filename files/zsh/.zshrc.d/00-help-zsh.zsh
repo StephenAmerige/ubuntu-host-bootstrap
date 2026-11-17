@@ -88,6 +88,11 @@ function :help:zsh
       "Explain checking and applying versioned Zsh configuration releases."
    print
 
+   :help-command "help ztag"
+   :help-wrap-indent 6 \
+      "Explain safe semantic-version tagging for any Git repository."
+   print
+
    :help-command "help timer"
    :help-wrap-indent 6 \
       "Explain prompt timers, timer selection, the Slurm timer, and how timer" \
@@ -629,6 +634,11 @@ function :help:zsh
    :help-command "help title"
    :help-wrap-indent 6 \
       "Learn terminal-title configuration."
+   print
+
+   :help-command "help ztag"
+   :help-wrap-indent 6 \
+      "Learn annotated Git semantic-version tagging on main."
    print
 
    :help-command "help -l"
