@@ -28,6 +28,17 @@ unverified redistribution license as described there.
 - Install the shared-group and individual-user provisioning helpers into `/usr/local/bin` for later administration.
 - Optionally schedule a reboot after successful provisioning, whether launched manually or through cloud-init.
 
+## GitHub Releases for the Zsh configuration
+
+For standalone Zsh distribution, this repository can publish a versioned
+`zshfiles.zip` and SHA-256 checksum as [GitHub Release assets](https://github.com/StephenAmerige/ubuntu-host-bootstrap/releases).
+The ZIP is ordered for direct extraction into a user's home directory.
+Once installed, run `zupdate --check` or `zupdate` to manage subsequent
+updates without cloning GitHub or using sudo.
+
+See the [Zsh README](files/zsh/README.md) for installation choices, safety
+considerations, and how to publish the first release.
+
 ## Configuring zsh and Vim on an existing Ubuntu host
 
 The independent `configure-shell-editor.sh` utility installs or updates this repository's canonical zsh and Vim configuration **without** running Docker provisioning, user/group creation, SSH key administration, or the `provision-vm.sh` orchestrator. It works on established Ubuntu VMs, physical hosts, and WSL2 distributions. The existing first-boot path (`example-invocation.sh` → `provision-vm.sh` → `vm-bootstrap.sh`) remains unchanged.
