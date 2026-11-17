@@ -36,6 +36,58 @@ Repository-managed files occupy `00`–`9f`; leave user customization in
 the `a0`–`ff` range. Avoid editing managed files in-place because an
 installation/update can replace them.
 
+## GitHub Release ZIP and user updates
+
+A versioned [GitHub Release](https://github.com/StephenAmerige/ubuntu-host-bootstrap/releases)
+provides a ready-to-extract `zshfiles.zip` and `zshfiles.zip.sha256`.
+Release tags use `vMAJOR.MINOR.PATCH`. The ZIP keeps the intentional entry
+order: `.zshenv`, `.zshrc`, managed `.zshrc.d/[0-9]*.zsh` files, and
+`.zshrc.d/examples/*.zsh`. It excludes the README and active user-owned
+configuration in the `a0`–`ff` namespace.
+
+For an initial direct ZIP installation, after a release has been published:
+
+```bash
+wget https://github.com/StephenAmerige/ubuntu-host-bootstrap/releases/latest/download/zshfiles.zip
+wget https://github.com/StephenAmerige/ubuntu-host-bootstrap/releases/latest/download/zshfiles.zip.sha256
+sha256sum -c zshfiles.zip.sha256
+unzip -l zshfiles.zip
+unzip -o zshfiles.zip -d "$HOME"
+```
+
+**Caution:** Direct extraction overwrites matching files without backups and
+does not remove obsolete managed modules. Back up your configuration first.
+The repository's `configure-shell-editor.sh` remains the safer administrative
+installation method.
+
+Once the release ZIP is installed, a new Zsh session provides:
+
+```text
+zupdate --version   Show the installed release version
+zupdate --check     Compare it with the latest published release
+zupdate             Update to the latest release
+help update         Explain the updater and its safeguards
+```
+
+`zupdate` verifies the downloaded archive checksum and allowed members
+before modifying files, backs up changed managed files, removes retired
+managed modules, and preserves personal `a0`–`ff` files. It never uses
+`sudo` or performs network checks during shell startup. Restart Zsh after
+an update to load the changed modules. These features require `curl`,
+`unzip`, and standard Ubuntu command-line utilities; `zupdate` does not
+install packages.
+
+To build a ZIP locally from the repository source:
+
+```bash
+bash scripts/build-zsh-release.sh v1.0.0 dist/
+```
+
+The [release workflow](../../.github/workflows/release-zsh.yml)
+publishes the ZIP and checksum when an existing version tag is pushed
+(or the workflow is manually run for that tag). A pull request alone
+does not publish a release.
+
 ## Interactive help
 
 Run `help` for a brief introduction and four examples, or `help -l`
@@ -52,6 +104,7 @@ to list currently available topics. More detailed topics include:
 | `help directories` | Directory stack navigation |
 | `help path` | PATH and MANPATH helpers |
 | `help title` | Terminal window/tab title |
+| `help update` | Check and install released Zsh updates |
 
 Each help topic is automatically discovered from a `:help:<topic>`
 function, so no central topic registry is needed.
