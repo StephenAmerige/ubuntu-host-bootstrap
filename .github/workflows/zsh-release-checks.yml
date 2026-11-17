@@ -1,0 +1,22 @@
+name: Zsh release packaging checks
+
+on:
+  pull_request:
+    paths:
+      - 'files/zsh/**'
+      - 'scripts/build-zsh-release.sh'
+      - 'tests/smoke-zsh-release.sh'
+      - '.github/workflows/zsh-release-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Zsh and packaging utilities
+        run: sudo apt-get update && sudo apt-get install -y zsh zip unzip
+      - name: Exercise package builder and updater
+        run: bash tests/smoke-zsh-release.sh
