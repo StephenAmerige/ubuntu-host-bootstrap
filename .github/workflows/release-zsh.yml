@@ -1,0 +1,51 @@
+name: Publish Zsh configuration release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag (vMAJOR.MINOR.PATCH)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+          fetch-depth: 0
+      - name: Validate the release tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"
+          [[ "$(git rev-parse HEAD)" == "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" ]]
+      - name: Install Zsh and packaging utilities
+        run: sudo apt-get update && sudo apt-get install -y zsh zip unzip
+      - name: Smoke-test release content and updater
+        run: bash tests/smoke-zsh-release.sh
+      - name: Build release archive
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: bash scripts/build-zsh-release.sh "$RELEASE_TAG" "$RUNNER_TEMP/zsh-release"
+      - name: Create GitHub release and attach artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            "$RUNNER_TEMP/zsh-release/zshfiles.zip" \
+            "$RUNNER_TEMP/zsh-release/zshfiles.zip.sha256" \
+            --verify-tag \
+            --title "Zsh configuration $RELEASE_TAG" \
+            --notes 'Ready-to-extract Zsh configuration archive and SHA-256 checksum. Run zupdate in an existing installation to update safely.'
