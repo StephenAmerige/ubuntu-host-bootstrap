@@ -83,6 +83,11 @@ function :help:zsh
       "Explain terminal window/tab title modes."
    print
 
+   :help-command "help update"
+   :help-wrap-indent 6 \
+      "Explain checking and applying versioned Zsh configuration releases."
+   print
+
    :help-command "help timer"
    :help-wrap-indent 6 \
       "Explain prompt timers, timer selection, the Slurm timer, and how timer" \
