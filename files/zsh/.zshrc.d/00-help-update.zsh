@@ -1,8 +1,11 @@
 ########################################################################
-# 00-help-update.zsh - Document user-controlled GitHub Release updates.
+# 00-help-update.zsh - Document the zupdate command.
+#
+# Keep this legacy filename: existing zupdate releases require this exact
+# archive member while loading newer configuration versions.
 ########################################################################
 
-function :help:update
+function :help:zupdate
 {
    print -P -- '%BZsh Configuration Updates%b'
    print
