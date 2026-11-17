@@ -22,6 +22,7 @@ diff -u "$Temp/expected" "$Temp/actual"
 command -v zsh >/dev/null || { echo 'zsh required for updater smoke test' >&2; exit 1; }
 zsh -n "$RepoRoot/files/zsh/.zshrc.d/95-update.zsh"
 zsh -n "$RepoRoot/files/zsh/.zshrc.d/00-help-update.zsh"
+bash "$RepoRoot/tests/smoke-ztag.sh"
 
 export HOME="$Temp/home"
 export MOCK_ASSET_DIR="$Temp/assets"
