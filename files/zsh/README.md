@@ -105,9 +105,40 @@ to list currently available topics. More detailed topics include:
 | `help path` | PATH and MANPATH helpers |
 | `help title` | Terminal window/tab title |
 | `help update` | Check and install released Zsh updates |
+| `help ztag` | Create and push guarded semantic-version Git tags |
 
 Each help topic is automatically discovered from a `:help:<topic>`
 function, so no central topic registry is needed.
+
+## Semantic-version Git tagging
+
+The `ztag` utility works with **any Git repository and Git remote**, not
+just repositories that publish GitHub Releases:
+
+```text
+ztag -M 'Breaking configuration changes'      # v1.2.3 -> v2.0.0
+ztag -m 'Add backward-compatible features'    # v1.2.3 -> v1.3.0
+ztag -p 'Fix version-related bug'              # v1.2.3 -> v1.2.4
+ztag -v1.5.0 'Publish version 1.5.0'           # select exact version
+help ztag
+```
+
+The comment is a required single quoted argument. Only strict tags of the
+form `vMAJOR.MINOR.PATCH` are considered; the highest **numeric** semantic
+version, not the most recently created tag, determines the next version.
+Create the very first version tag manually.
+
+The current branch must be **main**, the Git working tree must have no staged,
+unstaged, or untracked changes, and an `origin` remote must be configured.
+Explicit versions must advance beyond the highest existing version. `ztag`
+creates an annotated tag and pushes it to `origin`, but does not switch branches,
+commit, fetch, pull, or depend on GitHub Actions. If the push fails, the
+created local tag is retained for manual resolution.
+
+In **this repository only**, pushing a `vMAJOR.MINOR.PATCH` tag triggers the
+Zsh GitHub Release workflow. A user still running `v1.0.0` must publish the
+next release using ordinary `git tag` and `git push` commands; after running
+`zupdate` to install that release, `ztag` becomes available for later versions.
 
 ## Per-user configuration
 

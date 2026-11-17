@@ -6,6 +6,7 @@ on:
       - 'files/zsh/**'
       - 'scripts/build-zsh-release.sh'
       - 'tests/smoke-zsh-release.sh'
+      - 'tests/smoke-ztag.sh'
       - '.github/workflows/zsh-release-checks.yml'
 
 permissions:
