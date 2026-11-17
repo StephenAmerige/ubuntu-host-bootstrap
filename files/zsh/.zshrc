@@ -109,6 +109,11 @@ lf()  { if [[ $# -gt 0 ]]; then find "$@" -type f; else find . -type f; fi }
 #* LOAD Additional Requirements                                        *#
 #***********************************************************************#
 
-for ZshrcFile in "$HOME"/.zshrc.d/*.zsh; do
+# Load only valid two-digit hexadecimal modules from 00 through ff.
+# Zsh's (N) qualifier makes an empty directory safe without relying on NULL_GLOB.
+ZshrcFiles=( "$HOME"/.zshrc.d/[0-9a-f][0-9a-f]-*.zsh(N) )
+for ZshrcFile in "${ZshrcFiles[@]}"; do
+   [[ -f $ZshrcFile && ${ZshrcFile:t} =~ '^[0-9a-f]{2}-[^/]+[.]zsh$' ]] || continue
    . "$ZshrcFile"
 done
+unset ZshrcFile ZshrcFiles
