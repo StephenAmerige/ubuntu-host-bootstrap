@@ -31,7 +31,9 @@ may install the same Zsh files without this standalone installer.
 | `.zshrc.d/01-*.zsh` through `99-*.zsh` | Managed shell features |
 | `.zshrc.d/examples/` | Templates for user-owned configuration |
 
-`.zshrc` sources numbered `.zshrc.d/*.zsh` files in filename order.
+`.zshrc` sources only files named `HH-name.zsh` where `HH` is two
+lowercase hexadecimal digits (`00`–`ff`) and `name` is nonempty. It uses
+a no-match-safe Zsh array so unrelated `*.zsh` files are not sourced.
 Repository-managed files occupy `00`–`9f`; leave user customization in
 the `a0`–`ff` range. Avoid editing managed files in-place because an
 installation/update can replace them.
