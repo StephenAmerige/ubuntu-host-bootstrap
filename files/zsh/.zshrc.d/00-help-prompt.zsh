@@ -208,43 +208,44 @@ function :help:prompt
       "repository."
    print
 
-   print -P -- "%BManaging Python virtual environments%b"
+   print -P -- "%BManaging Python environments%b"
    print
 
    :help-command "vstart"
    :help-wrap-indent 6 \
-      "Activate the venv associated with the current Git repository. If the" \
-      "prompt shows %Bvenv%b with a brown background, successful activation" \
-      "changes the same indication to blue."
+      "Activate the venv or Conda environment matching the current" \
+      "Git worktree name. An ambiguous name requires a type selection."
    print
 
    :help-command "vstart name"
    :help-wrap-indent 6 \
-      "Activate the named venv by searching the directories configured in" \
-      "%BVENV_DIRS%b. If the selected venv does not match the current Git" \
-      "repository, its actual name appears in the blue prompt section."
+      "Activate the explicitly named venv or Conda environment."
+   print
+
+   :help-command "vstart --venv [name]"
+   :help-command "vstart --conda [name]"
+   :help-wrap-indent 6 \
+      "Select the environment type. With no name, use the current worktree."
    print
 
    :help-command "vstop"
    :help-wrap-indent 6 \
-      "Deactivate the current Python venv or Conda environment. If a matching" \
-      "venv remains available for the current Git repository, the brown" \
-      "%Bvenv%b indication reappears automatically."
+      "Deactivate an active Python venv or Conda environment."
    print
 
-   print -P -- "%BVirtual environment configuration%b"
-   print
-
-   :help-wrap-indent 3 \
-      "Directories containing named Python venv environments are specified in" \
-      "%B\$HOME/.zshrc.d/e0-python-env.zsh%b using the %BVENV_DIRS%b array." \
-      "The directories are searched in the order in which they are listed."
+   print -P -- "%BEnvironment discovery%b"
    print
 
    :help-wrap-indent 3 \
-      "For example, if the current Git repository is named %Bproject%b and one" \
-      "of the configured directories contains %Bproject/bin/activate%b, the" \
-      "prompt automatically indicates that a matching venv is available."
+      "Configure ordered %BVENV_DIRS%b and %BCONDA_DIRS%b arrays in" \
+      "%B$HOME/.zshrc.d/e0-python-env.zsh%b. A matching inactive" \
+      "environment displays %Bvenv%b or %Bconda%b on brown;" \
+      "when both exist, it displays %Bvenv+conda%b."
+   print
+
+   :help-command "help python"
+   :help-wrap-indent 6 \
+      "Show full Python venv/Conda configuration and activation help."
    print
 
    print -P -- "%BConda environments%b"

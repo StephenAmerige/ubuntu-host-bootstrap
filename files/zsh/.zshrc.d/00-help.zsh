@@ -181,20 +181,23 @@ function :help-list
 function :help-usage
 {
    print -rl -- \
-      "Help" \
+      "Zsh Features Help" \
+      "" \
+      "This help describes the interactive Zsh features provided by" \
+      "ubuntu-host-bootstrap." \
       "" \
       "Usage:" \
-      "   help <topic>     Show help for <topic>" \
-      "   help -l          List available help topics" \
+      "   help <topic>     Show help for a topic" \
+      "   help -l          List all available topics" \
       "" \
       "Examples:" \
       "   help zsh" \
-      "   help prompt" \
+      "   help python" \
       "   help session" \
-      "   help timer" \
-      "   help tags" \
+      "   help prompt" \
       "" \
-      'Use "help -l" to list the available help topics.'
+      "Source and documentation:" \
+      "   https://github.com/StephenAmerige/ubuntu-host-bootstrap/tree/main/files/zsh/"
 }
 
 

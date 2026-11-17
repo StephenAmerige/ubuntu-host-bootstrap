@@ -115,26 +115,32 @@ function :help:session
    print
 
    :help-wrap-indent 3 \
-      "The session service requires two user-defined global variables." \
-      "They are intentionally not defined by the distributed shell" \
-      "configuration because both values are installation- and user-specific." \
-      "They should normally be placed in a user configuration file such as" \
-      "%B\$HOME/.zshrc.d/ff-user.zsh%b."
+      "The session service requires %B_SessionAccount%b and" \
+      "%B_SessionShell%b. The optional %B_SessionPartition%b selects" \
+      "a Slurm partition. Configure them in a user file such as" \
+      "%B$HOME/.zshrc.d/ff-user.zsh%b."
    print
 
    :help-example "typeset -g _SessionAccount=my_project"
-   :help-example "typeset -g _SessionShell=/path/to/zsh"
+   :help-example "typeset -g _SessionPartition=development"
+   :help-example "typeset -g _SessionShell=/usr/bin/zsh"
    print
 
    :help-wrap-indent 3 \
-      "%B_SessionAccount%b specifies the Slurm account or project passed to" \
-      "%Bsrun -A%b when requesting the interactive allocation."
-    print
+      "%B_SessionAccount%b supplies %B--account%b to srun." \
+      "%B_SessionPartition%b, when nonempty, adds %B--partition%b." \
+      "It is a configuration variable, not a session command-line option."
+   print
 
    :help-wrap-indent 3 \
       "%B_SessionShell%b specifies the executable shell started on the allocated" \
       "compute node. This is useful on systems where the preferred zsh is not" \
        "the user's login shell or is installed at a site-specific pathname."
+   print
+
+   :help-wrap-indent 3 \
+      "Before launching Slurm, %Bsession%b prints the assembled" \
+      "%Bsrun%b command to show the chosen resources and partition."
    print
 
    print -P -- "%BSlurm timer integration%b"

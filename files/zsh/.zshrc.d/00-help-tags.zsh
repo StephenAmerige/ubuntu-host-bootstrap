@@ -65,7 +65,7 @@ function :help:tags
       "corresponding directory."
    print
 
-   :help-example "cd ~dash"
+   :help-example "cd ~myproj"
    :help-example "ls ~src"
    :help-example "vim ~src/project/README.md"
    print
