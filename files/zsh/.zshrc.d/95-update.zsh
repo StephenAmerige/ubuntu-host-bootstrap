@@ -35,7 +35,12 @@ function :zupdate:rollback
    for Relative in "$@"; do
       Destination="$HOME/$Relative"
       Previous="$Backup/$Relative"
-      command rm -f -- "$Destination" || return 1
+      # The complete examples tree is a single rollback unit.
+      if [[ $Relative == .zshrc.d/examples ]]; then
+         command rm -rf -- "$Destination" || return 1
+      else
+         command rm -f -- "$Destination" || return 1
+      fi
       if [[ -e $Previous || -L $Previous ]]; then
          command cp -a --no-dereference -- "$Previous" "$Destination" || return 1
       fi
@@ -52,8 +57,8 @@ function :zupdate:apply
    local Entries Relative Source Destination Previous
    local BackupBase="$HOME/.config-backups/ubuntu-host-bootstrap"
    local Backup
-   local -a Updated=() Removed=() Touched=()
-   local -A Present=()
+   local -a Updated=() Removed=() Touched=() ExistingManaged=()
+   local -A Present=() BackedUp=() TouchedOnce=()
 
    [[ $(command wc -l < "$Checksum") == 1 ]] &&
       command grep -Eq '^[0-9a-f]{64}  zshfiles[.]zip$' "$Checksum" || {
@@ -113,41 +118,41 @@ function :zupdate:apply
       }
    done
 
+   # Recreate every release-managed file after the old numeric namespace
+   # has been cleared, including files whose contents were unchanged.
    for Relative in ${(ok)Present}; do
       Destination="$HOME/$Relative"
       [[ ! -d $Destination ]] || {
          print -u2 -r -- "zupdate: destination is a directory: $Destination"
          return 1
       }
-      if [[ ! -f $Destination || -L $Destination ]] ||
-         ! command cmp -s -- "$Extracted/$Relative" "$Destination" ||
-         [[ $(command stat -c %a -- "$Destination") != 644 ]]; then
-         Updated+=("$Relative")
-      fi
+      Updated+=("$Relative")
    done
 
-   # Snapshot numeric-prefix candidates with Zsh's (N) null-glob qualifier.
-   # Only valid, absent-from-release managed modules are eligible for removal.
-   # Personal a0-ff modules and unrelated files must remain untouched.
+   # A numeric-leading name belongs to the managed namespace; capture all
+   # entries in an explicit array with a Zsh no-match-safe glob.
+   ExistingManaged=( "$HOME"/.zshrc.d/[0-9]*(N) )
    local Old
-   local -a ExistingManaged
-   ExistingManaged=( "$HOME"/.zshrc.d/[0-9]*.zsh(N) )
    for Old in "${ExistingManaged[@]}"; do
-      Relative=".zshrc.d/${Old:t}"
-      [[ $Relative =~ '^[.]zshrc[.]d/[0-9][0-9a-f]-[^/]+[.]zsh$' ]] || continue
-      [[ -n ${Present[$Relative]-} ]] || Removed+=("$Relative")
+      [[ ! -d $Old || -L $Old ]] || {
+         print -u2 -r -- "zupdate: refusing to remove numbered directory: $Old"
+         return 1
+      }
+      Removed+=(".zshrc.d/${Old:t}")
    done
 
-   if (( ${#Updated} == 0 && ${#Removed} == 0 )); then
-      print -r -- "zupdate: configuration already matches $Version"
-      return 0
-   fi
+   # The complete examples directory is replaced, not merged.
+   # Top-level user modules starting with a0-ff are never included.
 
    Backup="$BackupBase/zupdate-$(command date -u +%Y%m%dT%H%M%SZ)-$$"
    command mkdir -m 700 -p -- "$Backup" || return 1
 
-   # Complete backups before changing the installed files.
+   # Complete all backups before modifying the installed configuration.
+   # The entire examples directory is backed up as one rollback unit.
    for Relative in "${Updated[@]}" "${Removed[@]}"; do
+      [[ $Relative == .zshrc.d/examples/* ]] && continue
+      [[ -n ${BackedUp[$Relative]-} ]] && continue
+      BackedUp[$Relative]=1
       Source="$HOME/$Relative"
       if [[ -e $Source || -L $Source ]]; then
          Destination="$Backup/$Relative"
@@ -156,20 +161,16 @@ function :zupdate:apply
       fi
    done
 
-   command mkdir -p -- "$HOME/.zshrc.d/examples" || return 1
+   Source="$HOME/.zshrc.d/examples"
+   if [[ -d $Source ]]; then
+      command mkdir -p -- "$Backup/.zshrc.d" || return 1
+      command cp -a --no-dereference -- "$Source" "$Backup/.zshrc.d/examples" || return 1
+   fi
 
-   for Relative in "${Updated[@]}"; do
-      Touched+=("$Relative")
-      if ! :zupdate:replace "$Extracted/$Relative" "$HOME/$Relative"; then
-         print -u2 -r -- "zupdate: failed to install $Relative; rolling back"
-         :zupdate:rollback "$Backup" "${Touched[@]}" ||
-            print -u2 -r -- "zupdate: rollback needs manual review: $Backup"
-         return 1
-      fi
-   done
-
+   # Remove the complete previous managed namespace first.
    for Relative in "${Removed[@]}"; do
       Touched+=("$Relative")
+      TouchedOnce[$Relative]=1
       if ! command rm -f -- "$HOME/$Relative"; then
          print -u2 -r -- "zupdate: failed to remove $Relative; rolling back"
          :zupdate:rollback "$Backup" "${Touched[@]}" ||
@@ -178,7 +179,35 @@ function :zupdate:apply
       fi
    done
 
-   print -r -- "zupdate: installed $Version (${#Updated} updated, ${#Removed} removed)"
+   Touched+=(.zshrc.d/examples)
+   if ! command rm -rf -- "$HOME/.zshrc.d/examples"; then
+      print -u2 -r -- 'zupdate: failed to clear examples; rolling back'
+      :zupdate:rollback "$Backup" "${Touched[@]}" ||
+         print -u2 -r -- "zupdate: rollback needs manual review: $Backup"
+      return 1
+   fi
+   if ! command mkdir -p -- "$HOME/.zshrc.d/examples"; then
+      print -u2 -r -- 'zupdate: failed to create examples; rolling back'
+      :zupdate:rollback "$Backup" "${Touched[@]}" ||
+         print -u2 -r -- "zupdate: rollback needs manual review: $Backup"
+      return 1
+   fi
+
+   for Relative in "${Updated[@]}"; do
+      # The complete examples directory is rolled back in a single step.
+      if [[ $Relative != .zshrc.d/examples/* && -z ${TouchedOnce[$Relative]-} ]]; then
+         TouchedOnce[$Relative]=1
+         Touched+=("$Relative")
+      fi
+      if ! :zupdate:replace "$Extracted/$Relative" "$HOME/$Relative"; then
+         print -u2 -r -- "zupdate: failed to install $Relative; rolling back"
+         :zupdate:rollback "$Backup" "${Touched[@]}" ||
+            print -u2 -r -- "zupdate: rollback needs manual review: $Backup"
+         return 1
+      fi
+   done
+
+   print -r -- "zupdate: installed $Version (${#Updated} release files installed, ${#Removed} old numbered entries removed)"
    print -r -- "Backup: $Backup"
    print -r -- 'Start a new Zsh session to activate the updated configuration.'
 }
