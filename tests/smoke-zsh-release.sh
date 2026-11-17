@@ -50,9 +50,15 @@ cp "$RepoRoot/files/zsh/.zshrc.d/00-version.zsh" "$HOME/.zshrc.d/00-version.zsh"
 printf 'prior shell file\n' > "$HOME/.zshrc"
 printf 'prior managed module\n' > "$HOME/.zshrc.d/10-obsolete.zsh"
 printf 'retired high-prefix module\n' > "$HOME/.zshrc.d/9f-retired.zsh"
-printf 'preserve single-digit filename\n' > "$HOME/.zshrc.d/1-not-managed.zsh"
-printf 'preserve non-hex filename\n' > "$HOME/.zshrc.d/9g-not-managed.zsh"
+printf 'remove single-digit filename\n' > "$HOME/.zshrc.d/1-not-managed.zsh"
+printf 'remove non-hex filename\n' > "$HOME/.zshrc.d/9g-not-managed.zsh"
+printf 'remove non-zsh file\n' > "$HOME/.zshrc.d/7-stale.txt"
+printf 'preserve a0 settings\n' > "$HOME/.zshrc.d/a0-personal.zsh"
 printf 'preserve personal settings\n' > "$HOME/.zshrc.d/e0-personal.zsh"
+printf 'preserve ff settings\n' > "$HOME/.zshrc.d/ff-personal.zsh"
+mkdir -p "$HOME/.zshrc.d/examples/obsolete-subdir"
+printf 'remove obsolete example\n' > "$HOME/.zshrc.d/examples/retired-example.zsh"
+printf 'remove obsolete nested example\n' > "$HOME/.zshrc.d/examples/obsolete-subdir/old.txt"
 
 # The same Zsh glob with (N) must produce an empty array on no matches,
 # even with NULL_GLOB disabled.
@@ -108,9 +114,14 @@ grep -Fq 'Run zupdate -y to download and apply the update.' <<< "$CheckOutput"
 grep -Fxq 'prior shell file' "$HOME/.zshrc"
 grep -Fxq 'prior managed module' "$HOME/.zshrc.d/10-obsolete.zsh"
 grep -Fxq 'retired high-prefix module' "$HOME/.zshrc.d/9f-retired.zsh"
-grep -Fxq 'preserve single-digit filename' "$HOME/.zshrc.d/1-not-managed.zsh"
-grep -Fxq 'preserve non-hex filename' "$HOME/.zshrc.d/9g-not-managed.zsh"
+grep -Fxq 'remove single-digit filename' "$HOME/.zshrc.d/1-not-managed.zsh"
+grep -Fxq 'remove non-hex filename' "$HOME/.zshrc.d/9g-not-managed.zsh"
+grep -Fxq 'remove non-zsh file' "$HOME/.zshrc.d/7-stale.txt"
+grep -Fxq 'preserve a0 settings' "$HOME/.zshrc.d/a0-personal.zsh"
 grep -Fxq 'preserve personal settings' "$HOME/.zshrc.d/e0-personal.zsh"
+grep -Fxq 'preserve ff settings' "$HOME/.zshrc.d/ff-personal.zsh"
+grep -Fxq 'remove obsolete example' "$HOME/.zshrc.d/examples/retired-example.zsh"
+grep -Fxq 'remove obsolete nested example' "$HOME/.zshrc.d/examples/obsolete-subdir/old.txt"
 ! grep -Fxq "typeset -g _ZshFilesVersion=$Tag" "$HOME/.zshrc.d/00-version.zsh"
 
 # Only -y may apply the release; the existing backup/retirement safeguards remain.
@@ -119,12 +130,28 @@ zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate -y'
 grep -Fxq "typeset -g _ZshFilesVersion=$Tag" "$HOME/.zshrc.d/00-version.zsh"
 [[ ! -e "$HOME/.zshrc.d/10-obsolete.zsh" ]]
 [[ ! -e "$HOME/.zshrc.d/9f-retired.zsh" ]]
-grep -Fxq 'preserve single-digit filename' "$HOME/.zshrc.d/1-not-managed.zsh"
-grep -Fxq 'preserve non-hex filename' "$HOME/.zshrc.d/9g-not-managed.zsh"
+[[ ! -e "$HOME/.zshrc.d/1-not-managed.zsh" ]]
+[[ ! -e "$HOME/.zshrc.d/9g-not-managed.zsh" ]]
+[[ ! -e "$HOME/.zshrc.d/7-stale.txt" ]]
+[[ ! -e "$HOME/.zshrc.d/examples/retired-example.zsh" ]]
+[[ ! -e "$HOME/.zshrc.d/examples/obsolete-subdir" ]]
+[[ -f "$HOME/.zshrc.d/examples/ff-user.zsh" ]]
+grep -Fxq 'preserve a0 settings' "$HOME/.zshrc.d/a0-personal.zsh"
 grep -Fxq 'preserve personal settings' "$HOME/.zshrc.d/e0-personal.zsh"
+grep -Fxq 'preserve ff settings' "$HOME/.zshrc.d/ff-personal.zsh"
 find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name 10-obsolete.zsh | grep -q .
 find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name 9f-retired.zsh | grep -q .
+find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name 7-stale.txt | grep -q .
+find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name retired-example.zsh | grep -q .
+find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name old.txt | grep -q .
 find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name .zshrc | grep -q .
+
+# The numeric namespace must contain exactly the current packaged modules.
+unzip -Z -1 "$Temp/assets/zshfiles.zip" |
+   grep -E '^\.zshrc.d/[0-9][0-9a-f]-[^/]+\.zsh$' | sort > "$Temp/expected-managed"
+find "$HOME/.zshrc.d" -mindepth 1 -maxdepth 1 -printf '%f\n' |
+   grep -E '^[0-9]' | sed 's|^|.zshrc.d/|' | sort > "$Temp/installed-managed"
+diff -u "$Temp/expected-managed" "$Temp/installed-managed"
 zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate --version; zupdate; zupdate --check; zupdate -y'
 [[ $(wc -l < "$MOCK_ASSET_LOG") == 2 ]]
 
