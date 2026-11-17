@@ -180,8 +180,20 @@ function :help-list
 
 function :help-usage
 {
+   local Installed=${_ZshFilesVersion:-source}
+
+   # Use the same installed-version lookup as zupdate when available.
+   # A standalone source of 00-help.zsh can still display basic help.
+   if (( $+functions[:zupdate:version] )); then
+      :zupdate:version
+      Installed=$REPLY
+   fi
+
+   [[ $Installed == source ]] && Installed='source checkout (unversioned)'
+
    print -rl -- \
       "Zsh Features Help" \
+      "Installed configuration: $Installed" \
       "" \
       "This help describes the interactive Zsh features provided by" \
       "ubuntu-host-bootstrap." \
@@ -195,6 +207,11 @@ function :help-usage
       "   help python" \
       "   help session" \
       "   help prompt" \
+      "" \
+      "Release updates:" \
+      "   zupdate          Check for the latest release (no changes)" \
+      "   zupdate -y       Install an available release" \
+      "   help zupdate     Explain release updates and safeguards" \
       "" \
       "Source and documentation:" \
       "   https://github.com/StephenAmerige/ubuntu-host-bootstrap/tree/main/files/zsh/"
