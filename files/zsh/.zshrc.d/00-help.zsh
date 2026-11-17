@@ -184,7 +184,7 @@ function :help-usage
 
    # Use the same installed-version lookup as zupdate when available.
    # A standalone source of 00-help.zsh can still display basic help.
-   if (( $+functions[:zupdate:version] )); then
+   if whence ':zupdate:version' >/dev/null 2>&1; then
       :zupdate:version
       Installed=$REPLY
    fi
