@@ -188,26 +188,34 @@ function :zupdate:main
    local ReleaseURL='https://github.com/StephenAmerige/ubuntu-host-bootstrap/releases'
    local ApiURL='https://api.github.com/repos/StephenAmerige/ubuntu-host-bootstrap/releases/latest'
    local Current Latest Details Directory Lock Status
+   local Mode=check
+   local Usage='Usage: zupdate [-y|--check|--version|--help]'
 
    case ${1-} in
    --version)
-      (( $# == 1 )) || { print -u2 -r -- 'Usage: zupdate [--check|--version|--help]'; return 2; }
+      (( $# == 1 )) || { print -u2 -r -- "$Usage"; return 2; }
       :zupdate:version
       print -r -- "Installed Zsh configuration: $REPLY"
       return 0
       ;;
    --check|'')
-      (( $# <= 1 )) || { print -u2 -r -- 'Usage: zupdate [--check|--version|--help]'; return 2; }
+      (( $# <= 1 )) || { print -u2 -r -- "$Usage"; return 2; }
+      ;;
+   -y)
+      (( $# == 1 )) || { print -u2 -r -- "$Usage"; return 2; }
+      Mode=apply
       ;;
    --help|-h)
-      print -rl -- 'Usage: zupdate [--check|--version|--help]' '' \
-         '  zupdate            Install the latest published Zsh release' \
-         '  zupdate --check    Compare installed and latest versions' \
+      (( $# == 1 )) || { print -u2 -r -- "$Usage"; return 2; }
+      print -rl -- "$Usage" '' \
+         '  zupdate            Check for a newer release (no changes)' \
+         '  zupdate --check    Same as zupdate' \
+         '  zupdate -y         Download, verify, and install the latest release' \
          '  zupdate --version  Show the installed version'
       return 0
       ;;
    *)
-      print -u2 -r -- 'Usage: zupdate [--check|--version|--help]'
+      print -u2 -r -- "$Usage"
       return 2
       ;;
    esac
@@ -250,8 +258,9 @@ function :zupdate:main
       fi
    fi
 
-   if [[ ${1-} == --check ]]; then
+   if [[ $Mode == check ]]; then
       print -r -- 'An update is available.'
+      print -r -- 'Run zupdate -y to download and apply the update.'
       return 0
    fi
 

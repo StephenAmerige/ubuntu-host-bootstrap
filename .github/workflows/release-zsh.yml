@@ -48,4 +48,4 @@ jobs:
             "$RUNNER_TEMP/zsh-release/zshfiles.zip.sha256" \
             --verify-tag \
             --title "Zsh configuration $RELEASE_TAG" \
-            --notes 'Ready-to-extract Zsh configuration archive and SHA-256 checksum. Run zupdate in an existing installation to update safely.'
+            --notes 'Ready-to-extract Zsh configuration archive and SHA-256 checksum. Run zupdate to check or zupdate -y to apply an available update safely.'

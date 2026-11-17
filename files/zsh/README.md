@@ -64,12 +64,20 @@ Once the release ZIP is installed, a new Zsh session provides:
 
 ```text
 zupdate --version   Show the installed release version
-zupdate --check     Compare it with the latest published release
-zupdate             Update to the latest release
+zupdate             Check for the latest release (does not change files)
+zupdate --check     Same check-only behavior as zupdate
+zupdate -y          Download and install an available release
 help zupdate        Explain the updater and its safeguards
 ```
 
-`zupdate` verifies the downloaded archive checksum and allowed members
+`zupdate` and `zupdate --check` only compare versions and advise when an
+update is available. Apply changes explicitly with **`zupdate -y`**.
+**Transition for older installations:** If the installed updater does not yet
+recognize `-y`, run its existing `zupdate` command **once** to install the
+release with this new behavior. From then on, bare `zupdate` only checks and
+`zupdate -y` explicitly installs. Avoid assuming `-y` works before upgrading.
+
+The apply mode verifies the downloaded archive checksum and allowed members
 before modifying files, backs up changed managed files, removes retired
 managed modules, and preserves personal `a0`–`ff` files. It never uses
 `sudo` or performs network checks during shell startup. Restart Zsh after
@@ -104,7 +112,7 @@ to list currently available topics. More detailed topics include:
 | `help directories` | Directory stack navigation |
 | `help path` | PATH and MANPATH helpers |
 | `help title` | Terminal window/tab title |
-| `help zupdate` | Check and install released Zsh updates |
+| `help zupdate` | Check for releases and explicitly apply them with `zupdate -y` |
 | `help ztag` | Create and push guarded semantic-version Git tags |
 
 Each help topic is automatically discovered from a `:help:<topic>`
@@ -138,7 +146,7 @@ created local tag is retained for manual resolution.
 In **this repository only**, pushing a `vMAJOR.MINOR.PATCH` tag triggers the
 Zsh GitHub Release workflow. A user still running `v1.0.0` must publish the
 next release using ordinary `git tag` and `git push` commands; after running
-`zupdate` to install that release, `ztag` becomes available for later versions.
+`zupdate -y` to install that release, `ztag` becomes available for later versions.
 
 ## Per-user configuration
 

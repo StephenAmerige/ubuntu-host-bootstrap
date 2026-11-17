@@ -15,20 +15,26 @@ function :help:zupdate
    print
 
    :help-wrap-indent 3 \
-      'The %Bzupdate%b command updates the installed Zsh configuration' \
-      'from the latest published ubuntu-host-bootstrap GitHub Release.' \
-      'It runs only when requested, without Git or sudo.'
+      'The %Bzupdate%b command checks the latest published' \
+      'ubuntu-host-bootstrap Zsh configuration release.' \
+      'Installing an update requires explicit %B-y%b, without Git or sudo.'
    print
 
    :help-command 'zupdate --version'
    :help-wrap-indent 6 'Show the installed release version (or source).'
    print
 
-   :help-command 'zupdate --check'
-   :help-wrap-indent 6 'Compare the installed version with the latest release.'
+   :help-command 'zupdate'
+   :help-wrap-indent 6 \
+      'Compare the installed version with the latest release without' \
+      'making changes. If an update is available, suggest zupdate -y.'
    print
 
-   :help-command 'zupdate'
+   :help-command 'zupdate --check'
+   :help-wrap-indent 6 'Same as zupdate (check only).'
+   print
+
+   :help-command 'zupdate -y'
    :help-wrap-indent 6 \
       'Download and verify the latest zshfiles.zip and checksum, then' \
       'replace managed files and remove obsolete managed modules.'
