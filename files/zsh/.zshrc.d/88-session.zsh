@@ -160,16 +160,24 @@ EOF
    :session:time "$Time" || return
    Time=$REPLY
 
-   srun \
-      --pty \
-      -A "$_SessionAccount" \
-      --nodes=1 \
-      --ntasks=1 \
-      --cpus-per-task="$CPUs" \
-      --mem="$Memory" \
-      --time="$Time" \
-      env ZSH_TIMER=slurm "$_SessionShell" -di
-}
+   local -a SRunOptions=(
+      --pty
+      --account="$_SessionAccount"
+      --nodes=1
+      --ntasks=1
+      --cpus-per-task="$CPUs"
+      --mem="$Memory"
+      --time="$Time"
+   )
 
+   if [[ -n $_SessionPartition ]]; then
+      SRunOptions+=(
+         "--partition=$_SessionPartition"
+      )
+   fi
+
+   echo srun "${SRunOptions[@]}"
+   srun "${SRunOptions[@]}" env ZSH_TIMER=slurm "$_SessionShell" -di
+}
 
 alias session=':session'

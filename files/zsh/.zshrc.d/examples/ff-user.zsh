@@ -42,12 +42,10 @@ pgap on &>/dev/null
 # Examples:
 #
 #    typeset -g _SessionAccount=my_project
+#    typeset -g _SessionPartition=development
 #    typeset -g _SessionShell=/usr/bin/zsh
 #
 ########################################################################
-
-#typeset -g _SessionAccount=my_project
-#typeset -g _SessionShell=/usr/bin/zsh
 
 ########################################################################
 # PATH customization.
@@ -68,4 +66,14 @@ pgap on &>/dev/null
 #    addpath before /opt/local/bin
 #    addpath after  /opt/vendor/bin
 #
+########################################################################
+
+########################################################################
+# MISCELLANEOUS customization
+#
+# This section includes other customization that a user might want.
+#
+# Examples:
+#
+#    export TZ='America/New_York'
 ########################################################################
