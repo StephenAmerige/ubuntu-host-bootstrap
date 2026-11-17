@@ -60,8 +60,27 @@ function :help:zsh
 
    :help-command "help session"
    :help-wrap-indent 6 \
-      "Explain interactive Slurm sessions, resource profiles, overrides, and" \
-      "required user configuration."
+      "Explain Slurm sessions, profiles, and account/partition configuration."
+   print
+
+   :help-command "help python"
+   :help-wrap-indent 6 \
+      "Explain venv/Conda activation and environment discovery."
+   print
+
+   :help-command "help path"
+   :help-wrap-indent 6 \
+      "Explain executable lookup and PATH/MANPATH helpers."
+   print
+
+   :help-command "help directories"
+   :help-wrap-indent 6 \
+      "Explain directory-stack navigation commands."
+   print
+
+   :help-command "help title"
+   :help-wrap-indent 6 \
+      "Explain terminal window/tab title modes."
    print
 
    :help-command "help timer"
@@ -225,10 +244,10 @@ function :help:zsh
    print
 
    :help-wrap-indent 3 \
-      "The service requires user-defined %B_SessionAccount%b and" \
-      "%B_SessionShell%b variables, normally configured in" \
-      "%B\$HOME/.zshrc.d/ff-user.zsh%b. Interactive sessions automatically" \
-      "select the Slurm timer for the child shell."
+      "The service requires %B_SessionAccount%b and %B_SessionShell%b." \
+      "Optional %B_SessionPartition%b selects a partition. Configure" \
+      "them in %B\$HOME/.zshrc.d/ff-user.zsh%b; the child shell" \
+      "automatically uses the Slurm timer."
    print
 
    :help-command "help session"
@@ -280,10 +299,9 @@ function :help:zsh
    print
 
    :help-wrap-indent 3 \
-      "The prompt can detect a Python venv whose name matches the current Git" \
-      "repository. An available but inactive matching environment is displayed" \
-      "in brown. An active Python venv is displayed in blue. An active Conda" \
-      "environment is displayed in orange."
+      "The prompt discovers matching Python venv and Conda environments." \
+      "Inactive matches appear in brown (venv, conda, or venv+conda when" \
+      "both exist). An active venv is blue; an active Conda is orange."
    print
 
    :help-command "vstart"
@@ -293,7 +311,13 @@ function :help:zsh
 
    :help-command "vstart name"
    :help-wrap-indent 6 \
-      "Activate the named venv by searching the directories in %BVENV_DIRS%b."
+      "Activate the named venv or Conda environment from configured paths."
+   print
+
+   :help-command "vstart --venv [name]"
+   :help-command "vstart --conda [name]"
+   :help-wrap-indent 6 \
+      "Select the environment type when both have the same name."
    print
 
    :help-command "vstop"
@@ -302,9 +326,13 @@ function :help:zsh
    print
 
    :help-wrap-indent 3 \
-      "The ordered list of directories containing Python venv environments is" \
-      "configured using %BVENV_DIRS%b in" \
-      "%B\$HOME/.zshrc.d/e0-python-env.zsh%b."
+      "The ordered search arrays %BVENV_DIRS%b and %BCONDA_DIRS%b" \
+      "are configured in %B\$HOME/.zshrc.d/e0-python-env.zsh%b."
+   print
+
+   :help-command "help python"
+   :help-wrap-indent 6 \
+      "Show complete Python environment help."
    print
 
    print -P -- "%BDirectory navigation and stack%b"
@@ -576,6 +604,26 @@ function :help:zsh
    :help-command "help tags"
    :help-wrap-indent 6 \
       "Learn how to create persistent short names for filesystem locations."
+   print
+
+   :help-command "help python"
+   :help-wrap-indent 6 \
+      "Learn venv and Conda activation."
+   print
+
+   :help-command "help path"
+   :help-wrap-indent 6 \
+      "Learn PATH and MANPATH configuration."
+   print
+
+   :help-command "help directories"
+   :help-wrap-indent 6 \
+      "Learn directory-stack navigation."
+   print
+
+   :help-command "help title"
+   :help-wrap-indent 6 \
+      "Learn terminal-title configuration."
    print
 
    :help-command "help -l"
