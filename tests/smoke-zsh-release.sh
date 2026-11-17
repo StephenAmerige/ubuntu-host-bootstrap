@@ -49,7 +49,16 @@ cp "$RepoRoot/files/zsh/.zshrc.d/95-update.zsh" "$HOME/.zshrc.d/95-update.zsh"
 cp "$RepoRoot/files/zsh/.zshrc.d/00-version.zsh" "$HOME/.zshrc.d/00-version.zsh"
 printf 'prior shell file\n' > "$HOME/.zshrc"
 printf 'prior managed module\n' > "$HOME/.zshrc.d/10-obsolete.zsh"
+printf 'retired high-prefix module\n' > "$HOME/.zshrc.d/9f-retired.zsh"
+printf 'preserve single-digit filename\n' > "$HOME/.zshrc.d/1-not-managed.zsh"
+printf 'preserve non-hex filename\n' > "$HOME/.zshrc.d/9g-not-managed.zsh"
 printf 'preserve personal settings\n' > "$HOME/.zshrc.d/e0-personal.zsh"
+
+# The same Zsh glob with (N) must produce an empty array on no matches,
+# even with NULL_GLOB disabled.
+mkdir -p "$Temp/empty-modules"
+EmptyCount=$(zsh -f -c 'unsetopt null_glob; typeset -a Candidates; Candidates=( "$1"/[0-9]*.zsh(N) ); print -r -- ${#Candidates}' zsh-glob-test "$Temp/empty-modules")
+[[ $EmptyCount == 0 ]]
 
 # Bare help should show the installed release and point to zupdate without
 # requiring a network lookup. The source checkout is explicitly unversioned.
@@ -98,6 +107,9 @@ grep -Fq 'Run zupdate -y to download and apply the update.' <<< "$CheckOutput"
 [[ ! -d "$HOME/.config-backups/ubuntu-host-bootstrap" ]]
 grep -Fxq 'prior shell file' "$HOME/.zshrc"
 grep -Fxq 'prior managed module' "$HOME/.zshrc.d/10-obsolete.zsh"
+grep -Fxq 'retired high-prefix module' "$HOME/.zshrc.d/9f-retired.zsh"
+grep -Fxq 'preserve single-digit filename' "$HOME/.zshrc.d/1-not-managed.zsh"
+grep -Fxq 'preserve non-hex filename' "$HOME/.zshrc.d/9g-not-managed.zsh"
 grep -Fxq 'preserve personal settings' "$HOME/.zshrc.d/e0-personal.zsh"
 ! grep -Fxq "typeset -g _ZshFilesVersion=$Tag" "$HOME/.zshrc.d/00-version.zsh"
 
@@ -106,8 +118,12 @@ zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate -y'
 [[ $(wc -l < "$MOCK_ASSET_LOG") == 2 ]]
 grep -Fxq "typeset -g _ZshFilesVersion=$Tag" "$HOME/.zshrc.d/00-version.zsh"
 [[ ! -e "$HOME/.zshrc.d/10-obsolete.zsh" ]]
+[[ ! -e "$HOME/.zshrc.d/9f-retired.zsh" ]]
+grep -Fxq 'preserve single-digit filename' "$HOME/.zshrc.d/1-not-managed.zsh"
+grep -Fxq 'preserve non-hex filename' "$HOME/.zshrc.d/9g-not-managed.zsh"
 grep -Fxq 'preserve personal settings' "$HOME/.zshrc.d/e0-personal.zsh"
 find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name 10-obsolete.zsh | grep -q .
+find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name 9f-retired.zsh | grep -q .
 find "$HOME/.config-backups/ubuntu-host-bootstrap" -type f -name .zshrc | grep -q .
 zsh -f -c 'source "$HOME/.zshrc.d/95-update.zsh"; zupdate --version; zupdate; zupdate --check; zupdate -y'
 [[ $(wc -l < "$MOCK_ASSET_LOG") == 2 ]]
